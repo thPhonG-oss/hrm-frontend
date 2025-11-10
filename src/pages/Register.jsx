@@ -1,37 +1,30 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import api from "../api";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
-export default function Login() {
+export default function Register() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // Clear token cũ khi vào trang login
-    localStorage.removeItem("accessToken");
-  }, []);
-
-  const handleLogin = async (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     setError("");
 
+    if (password !== confirmPassword) {
+      setError("Mật khẩu không khớp!");
+      return;
+    }
+
     try {
-      const res = await api.post("/auth/login", { username, password });
-
-      // Backend trả về UserResponseDTO với accessToken
-      const { accessToken, username: userName, id, role } = res.data;
-
-      localStorage.setItem("accessToken", accessToken);
-      localStorage.setItem("username", userName);
-      localStorage.setItem("userId", id);
-      localStorage.setItem("role", role);
-
-      navigate("/dashboard");
+      await api.post("/auth/register", { username, password });
+      alert("Đăng ký thành công! Vui lòng đăng nhập.");
+      navigate("/login");
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.message || "Đăng nhập thất bại!");
+      setError(err.response?.data?.message || "Đăng ký thất bại!");
     }
   };
 
@@ -48,7 +41,7 @@ export default function Login() {
         }}
       >
         <h2 className="text-3xl font-bold text-center mb-6 text-gray-800">
-          Đăng nhập HRM
+          Đăng ký HRM
         </h2>
 
         {error && (
@@ -57,7 +50,7 @@ export default function Login() {
           </div>
         )}
 
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleRegister} className="space-y-4">
           <input
             type="text"
             placeholder="Username"
@@ -74,6 +67,14 @@ export default function Login() {
             required
             className="w-full p-3 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-400"
           />
+          <input
+            type="password"
+            placeholder="Confirm Password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+            className="w-full p-3 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-400"
+          />
           <button
             type="submit"
             className="w-full py-3 rounded text-white font-semibold"
@@ -82,9 +83,16 @@ export default function Login() {
               boxShadow: "var(--shadow-custom)",
             }}
           >
-            Đăng nhập
+            Đăng ký
           </button>
         </form>
+
+        <p className="text-center mt-4 text-gray-600">
+          Đã có tài khoản?{" "}
+          <Link to="/login" className="text-blue-600 hover:underline">
+            Đăng nhập
+          </Link>
+        </p>
       </div>
     </div>
   );
