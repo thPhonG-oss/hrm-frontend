@@ -1,19 +1,17 @@
 import React, { useState } from "react";
-import api from "../api";
+import stravaService from "../services/strava.service";
 
 export default function ConnectStravaButton() {
   const [loading, setLoading] = useState(false);
 
   const handleConnect = async () => {
     setLoading(true);
-    try {
-      // Step 1: Gọi backend để lấy Strava authorization URL
-      const res = await api.get("/connect/strava");
 
-      // Step 2: Redirect user đến Strava
-      window.location.href = res.data.redirectUrl;
+    try {
+      const authUrl = await stravaService.getAuthUrl();
+      window.location.href = authUrl;
     } catch (err) {
-      console.error("Error connecting to Strava:", err);
+      console.error("Strava connection error:", err);
       alert(
         "Không thể kết nối Strava: " +
           (err.response?.data?.message || err.message)

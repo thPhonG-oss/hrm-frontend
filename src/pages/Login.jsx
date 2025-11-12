@@ -1,43 +1,43 @@
 import React, { useState, useEffect } from "react";
-import api from "../api";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import authService from "../services/auth.service";
 
 export default function Login() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [formData, setFormData] = useState({ username: "", password: "" });
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Clear token cũ khi vào trang login
+    // Clear token khi vào login page
     localStorage.removeItem("accessToken");
   }, []);
 
-  const handleLogin = async (e) => {
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
 
     try {
-      const res = await api.post("/auth/login", { username, password });
-
-      // Backend trả về UserResponseDTO với accessToken
-      const { accessToken, username: userName, id, role } = res.data;
-
-      localStorage.setItem("accessToken", accessToken);
-      localStorage.setItem("username", userName);
-      localStorage.setItem("userId", id);
-      localStorage.setItem("role", role);
-
+      await authService.login(formData);
       navigate("/dashboard");
     } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.message || "Đăng nhập thất bại!");
+      console.error("Login error:", err);
+      setError(
+        err.response?.data?.message || err.message || "Đăng nhập thất bại!"
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center bg-gray-100 font-sans"
+      className="min-h-screen flex items-center justify-center bg-gray-100"
       style={{ fontFamily: "var(--font-montserrat)" }}
     >
       <div
@@ -57,34 +57,46 @@ export default function Login() {
           </div>
         )}
 
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <input
             type="text"
+            name="username"
             placeholder="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            value={formData.username}
+            onChange={handleChange}
             required
-            className="w-full p-3 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-400"
+            disabled={loading}
+            className="w-full p-3 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-400 disabled:opacity-50"
           />
           <input
             type="password"
+            name="password"
             placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            value={formData.password}
+            onChange={handleChange}
             required
-            className="w-full p-3 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-400"
+            disabled={loading}
+            className="w-full p-3 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-400 disabled:opacity-50"
           />
           <button
             type="submit"
-            className="w-full py-3 rounded text-white font-semibold"
+            disabled={loading}
+            className="w-full py-3 rounded text-white font-semibold disabled:opacity-50"
             style={{
               backgroundImage: "var(--background-image-button-gradient)",
               boxShadow: "var(--shadow-custom)",
             }}
           >
-            Đăng nhập
+            {loading ? "Đang đăng nhập..." : "Đăng nhập"}
           </button>
         </form>
+
+        <p className="text-center mt-4 text-gray-600">
+          Chưa có tài khoản?{" "}
+          <Link to="/register" className="text-blue-600 hover:underline">
+            Đăng ký
+          </Link>
+        </p>
       </div>
     </div>
   );

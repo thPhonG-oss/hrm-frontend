@@ -1,0 +1,50 @@
+@startuml
+title Luồng xác thực Strava OAuth2
+Actor Employee as  user
+
+participant "Frontend React App" as FE
+participant "Backend Springboot" as BE
+participant "Strava API" as strava
+
+user -> FE: Click "Connect Strava"
+activate FE
+FE -> BE: 1. GET /connect/strava \n RequestBody: {"accessToken": "jwttoken"}
+activate BE
+note over BE
+2. validate access token
+3. get username from token
+4. build authorization url
+end note
+
+BE -> FE: return {"redirectUrl" : "https://www.strava.com/oauth/authorize\n?client_id=184102&response_type=code\n&redirect_uri=http://localhost:8081/oauth2/callback&approval_prompt=force&scope=read,activity:read_all&state=john"}
+
+deactivate BE
+
+FE -> strava: 6. window.location.href = redirectUrl
+activate strava
+
+note over strava
+User authorize
+end note
+
+strava -> BE: 7. Redirect to /oauth2/callback?code=xxx&state=john
+activate BE
+
+BE -> strava: 8. POST /oauth/token \n Content-Type: application/x-www-form-urlencoded \n client_id=184102&client_secret=bc20bba1d5b6...&code=a1b2c3d4e5f6&grant_type=authorization_code
+
+strava -> BE: 9. {\n"accessToken": "jwtaccesstoken...",\n "refreshToken":"jwtrefreshtoken..."\n}
+
+note over BE
+10. save token to DB
+11. redirect to frontend
+end note
+
+BE -> FE: 12. Browser -> /dashboard?strava=success
+
+deactivate BE
+
+note over FE
+13. Show success notification
+end note
+
+@enduml

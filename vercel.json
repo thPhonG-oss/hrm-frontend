@@ -1,0 +1,16 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite",
+  "env": {
+    "VITE_API_URL": "https://hrm-backend-production-c2fe.up.railway.app/api/v1",
+    "VITE_APP_ENV": "production",
+    "VITE_ENABLE_DEVTOOLS": "false"
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
